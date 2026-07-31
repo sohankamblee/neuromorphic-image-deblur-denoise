@@ -34,6 +34,15 @@ class EventStream:
     t: np.ndarray
     p: np.ndarray
 
+@dataclass
+class EventFrame:
+    """
+    Event accumulation over a time interval.
+    """
+
+    image: np.ndarray
+    t_start: float
+    t_end: float
 
 # ==========================================================
 # Loading
@@ -159,6 +168,112 @@ def print_event_statistics(events: EventStream) -> None:
 
     print("=" * 45)
 
+# ==========================================================
+# Filtering and Accumulation
+# ==========================================================
+
+def filter_events_by_time(
+    events: EventStream,
+    t_start: float,
+    t_end: float,
+) -> EventStream:
+    """
+    Return events within [t_start, t_end].
+    """
+
+    mask = (events.t >= t_start) & (events.t <= t_end)
+
+    return EventStream(
+        x=events.x[mask],
+        y=events.y[mask],
+        t=events.t[mask],
+        p=events.p[mask],
+    )
+
+def accumulate_events(
+    events: EventStream,
+    image_shape: tuple[int, int],
+) -> np.ndarray:
+    """
+    Equation (5)
+
+    Accumulate polarity values into an image.
+    """
+
+    H, W = image_shape
+
+    frame = np.zeros((H, W), dtype=np.float32)
+
+    np.add.at(
+        frame,
+        (events.y, events.x),
+        events.p,
+    )
+
+    return frame
+
+def compute_event_prior(
+    events: EventStream,
+    tau: float,
+    image_shape: tuple[int, int],
+) -> EventFrame:
+    """
+    Compute I_tau(t).
+
+    Parameters
+    ----------
+    tau
+        Time window.
+
+    image_shape
+        (height, width)
+    """
+
+    t_end = events.t[-1]
+
+    t_start = t_end - tau
+
+    window_events = filter_events_by_time(
+        events,
+        t_start,
+        t_end,
+    )
+
+    prior = accumulate_events(
+        window_events,
+        image_shape,
+    )
+
+    return EventFrame(
+        image=prior,
+        t_start=t_start,
+        t_end=t_end,
+    )
+
+# ==========================================================
+# Visualization
+# ==========================================================
+
+import matplotlib.pyplot as plt
+
+def visualize_event_prior(event_frame: EventFrame):
+
+    plt.figure(figsize=(8, 6))
+
+    plt.imshow(
+        event_frame.image,
+        cmap="seismic",
+        vmin=-5,
+        vmax=5,
+    )
+
+    plt.title("Event Prior")
+
+    plt.colorbar()
+
+    plt.tight_layout()
+
+    plt.show()
 
 # ==========================================================
 # Self Test
@@ -175,3 +290,11 @@ if __name__ == "__main__":
     validate_events(events)
 
     print_event_statistics(events)
+
+    event_prior = compute_event_prior(
+        events,
+        tau=6000,
+        image_shape=(260, 346),
+    )
+
+    visualize_event_prior(event_prior)
