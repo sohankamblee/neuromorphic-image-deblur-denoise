@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+.venv/
+results/*
+!results/.gitkeep
+
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Large datasets
+data/events/
+data/images/
+
+# Generated results
+results/
+
+# OS files
+.DS_Store
+Thumbs.db
