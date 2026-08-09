@@ -4,6 +4,10 @@ from pathlib import Path
 import numpy as np
 from scipy.io import loadmat
 
+from src.dataset import (
+    resolve_dataset_paths,
+    get_result_directory,
+)
 
 # ==========================================================
 # Data Structure
@@ -355,18 +359,12 @@ def visualize_event_gradient(
 from pathlib import Path
 
 def save_event_prior(
-    event_frame: EventFrame,
-    filename: str,
+    event_frame,
+    output_dir: Path,
 ):
     """
     Save event prior image.
     """
-
-    PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-    output_dir = PROJECT_ROOT / "results"
-
-    output_dir.mkdir(exist_ok=True)
 
     plt.figure(figsize=(8,6))
 
@@ -378,7 +376,7 @@ def save_event_prior(
     plt.axis("off")
 
     plt.savefig(
-        output_dir / filename,
+        output_dir / "event_prior.png",
         dpi=300,
         bbox_inches="tight",
     )
@@ -386,18 +384,12 @@ def save_event_prior(
     plt.close()
 
 def save_event_gradient(
-    gradient: EventGradient,
-    filename: str,
+    gradient,
+    output_dir: Path,
 ):
     """
     Save event gradient magnitude image.
     """
-
-    PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-    output_dir = PROJECT_ROOT / "results"
-
-    output_dir.mkdir(exist_ok=True)
 
     plt.figure(figsize=(8,6))
 
@@ -409,7 +401,7 @@ def save_event_gradient(
     plt.axis("off")
 
     plt.savefig(
-        output_dir / filename,
+        output_dir / "event_gradient.png",
         dpi=300,
         bbox_inches="tight",
     )
@@ -426,9 +418,15 @@ if __name__ == "__main__":
 
     PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-    filepath = PROJECT_ROOT / "data" / "events" / "badminton.mat"
+    event_path, _ = resolve_dataset_paths(
+        "badminton"
+    )
 
-    events = load_events(filepath)
+    events = load_events(event_path)
+
+    output_dir = get_result_directory(
+        "badminton"
+    )
 
     validate_events(events)
 
@@ -446,12 +444,12 @@ if __name__ == "__main__":
 
     save_event_prior(
         event_prior,
-        "event_prior.png",
+        output_dir,
     )
 
     save_event_gradient(
         gradient,
-        "event_gradient.png",
+        output_dir,
     )
 
     visualize_event_prior(event_prior)
