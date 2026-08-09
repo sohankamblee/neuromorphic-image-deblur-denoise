@@ -33,3 +33,23 @@ print("Kernel:", flip.shape)
 mag = gradient_magnitude(gx, gy)
 
 print("Magnitude:", mag.shape)
+
+from src.utils.image_operators import (
+    fft2,
+    ifft2,
+    psf_to_otf,
+)
+
+freq = fft2(image)
+print("FFT:", freq.shape)
+
+recovered = np.real(ifft2(freq))
+print("IFFT:", recovered.shape)
+
+otf = psf_to_otf(kernel, image.shape)
+print("OTF:", otf.shape)
+
+print(
+    "IFFT Reconstruction Error:",
+    np.max(np.abs(image - recovered))
+)

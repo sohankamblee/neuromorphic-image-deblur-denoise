@@ -6,8 +6,6 @@ Low-level mathematical operators used throughout the optimization.
 These operators correspond to the discrete image operators used in the
 optimization formulation of the paper.
 
-Author: Sohan Kamble
-Project: Neuromorphic Image Deblur & Denoise
 """
 
 from __future__ import annotations
@@ -173,3 +171,49 @@ def normalize(
         return np.zeros_like(image)
 
     return (image - mn) / (mx - mn)
+
+# ==========================================================
+# FFT Utilities
+# ==========================================================
+
+def fft2(image: np.ndarray) -> np.ndarray:
+    """
+    2D Fast Fourier Transform.
+    """
+    return np.fft.fft2(image)
+
+
+def ifft2(freq: np.ndarray) -> np.ndarray:
+    """
+    Inverse 2D FFT.
+    """
+    return np.fft.ifft2(freq)
+
+
+# ==========================================================
+# PSF -> OTF
+# ==========================================================
+
+def psf_to_otf(
+    psf: np.ndarray,
+    out_shape: tuple[int, int],
+) -> np.ndarray:
+    """
+    Convert a spatial PSF (kernel) into its OTF representation.
+
+    Equivalent to MATLAB's psf2otf().
+    """
+
+    psf = psf.astype(np.float32)
+
+    otf = np.zeros(out_shape, dtype=np.float32)
+
+    h, w = psf.shape
+
+    otf[:h, :w] = psf
+
+    # circular shift
+    otf = np.roll(otf, -(h // 2), axis=0)
+    otf = np.roll(otf, -(w // 2), axis=1)
+
+    return np.fft.fft2(otf)
